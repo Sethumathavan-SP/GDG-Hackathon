@@ -14,22 +14,11 @@ conn = mysql.connector.connect(
 )
 
 cursor = conn.cursor()
-# cursor.execute(
-#         """
-#             delete from users;
-#         """
-# )
-# conn.commit()
-print("success")
-USERNAMES = ["user1", "user2"]
-EMAILS = ["user1@example.com", "user2@example.com"]
-USER_CREDENTIALS = {"user1": "password1", "user2": "password2"}
-
 def image_to_base64(binary_image):
-    image = Image.open(io.BytesIO(binary_image))  # Convert binary BLOB to Image
+    image = Image.open(io.BytesIO(binary_image))
     buffered = io.BytesIO()
-    image.save(buffered, format="PNG")  # Save the image as PNG (or another format)
-    return base64.b64encode(buffered.getvalue()).decode('utf-8')  # Return base64 encoded image
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
 def pil_to_blob(image, format="PNG"):
     img_byte_arr = io.BytesIO()
@@ -54,7 +43,6 @@ def check_login(username, password):
             return [True,data[4],data[3],data[5],data[6]]
     return [False]
 
-# Login page
 def login_page():
     st.markdown("<h1 style='text-align: center;'>Login Page</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([2, 3, 2])
@@ -130,8 +118,6 @@ def user_page():
         severityScore = AI.severity_score(cursor.fetchall(),diseaseNAme)
         cursor.execute("insert into report(disease,name,phoneNumber,email,image,severity) values(%s,%s,%s,%s,%s,%s  )",(diseaseNAme,st.session_state["username"],st.session_state["phoneNumber"],st.session_state["email"],pil_to_blob(image),severityScore))
         conn.commit()
-        # cursor.execute("select * from report")
-        # st.write(cursor.fetchall())    
 
 def docter_page():
     st.markdown("<h1 style='text-align: center;'>Reports</h1>", unsafe_allow_html=True)
@@ -139,19 +125,10 @@ def docter_page():
     cursor.execute("SELECT disease, name, phoneNumber, email, image FROM report order by severity desc")
     data = cursor.fetchall()
 
-    # Process the data (convert image BLOB to Base64)
     processed_data = []
     for row in data:
-        # Convert the image (last column) from binary to base64
         image_base64 = image_to_base64(row[4])
         processed_data.append(row[:4] + (image_base64,))
-
-    # Create the HTML table
-    # html = "<table style='width:100%;border:1px solid black;'><tr><th>Disease</th><th>Name</th><th>Phone Number</th><th>Email</th><th>Image</th></tr>"
-    # for row in processed_data:
-    #     html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td>"
-    #     html += f"<td><img src='data:image/png;base64,{row[4]}' width='100' height='100'></td></tr>"
-    # html += "</table>"
 
     if "processed_data" not in st.session_state:
         st.session_state.processed_data = [ row[:4] + (image_to_base64(row[4]),) for row in data ]
@@ -170,7 +147,6 @@ def docter_page():
                 st.rerun()
     html += "</table>"
 
-    # Display the HTML table in Streamlit
     with col2:
         st.markdown(html, unsafe_allow_html=True)
 
